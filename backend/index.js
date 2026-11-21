@@ -17,16 +17,12 @@ const connection = await mysql.createConnection({
   database: process.env.MYSQL_DATABASE,
 });
 
-// app.get("/", (req, res) => {
-//   res.send("Hello World!");
-// });
-
 app.get("/", async (req, res) => {
   try {
     const [users] = await connection.query("SELECT * FROM USER");
 
     console.log("Request received for fetching users: ", users); // results contains rows returned by server
-    // console.log(fields); // fields contains extra meta data about results, if available  
+    // console.log(fields); // fields contains extra meta data about results, if available
 
     res.json({
       message: "Users fetched successfully!",
@@ -37,17 +33,23 @@ app.get("/", async (req, res) => {
   }
 });
 
-app.post("/sign-up", (req, res) => {
+app.post("/sign-up", async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
 
   // database operations
+  const sql = `INSERT INTO user (name, email, password) VALUES (?, ?, ?)`;
+  const [result] = await connection.execute(
+    // `INSERT INTO user (name, email, password) VALUES (?, ?, ?)`,
+    sql,
+    [name, email, password],
+  );
 
   console.log(
-    `Request received with name: ${name}, email: ${email}, password: ${password}`,
+    `Request received with name: ${name}, email: ${email}; Result: ${result}`,
   );
 
   res.json({
-    message: "Sign-up request received!",
+    message: result,
     name: name,
     email: email,
     // password: password,
@@ -55,17 +57,21 @@ app.post("/sign-up", (req, res) => {
   });
 });
 
-app.post("/sign-in", (req, res) => {
+app.post("/sign-in", async (req, res) => {
   const { email, password } = req.body;
 
   // database operations
-
-  console.log(
-    `Request received: /sign-in; name: ${email} password: ${password}`,
+  const sql = `SELECT name, email from USER WHERE email=? and password=?`;
+  const [result] = await connection.execute(
+    // `SELECT name, email from USER WHERE email=? and password=?`
+    sql,
+    [email, password],
   );
 
+  console.log(`Request received: /sign-in; email: ${email}; Result: ${result}`);
+
   res.json({
-    message: "You have signed in successfully!",
+    message: result,
     token: "Token",
   });
 });
